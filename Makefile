@@ -14,10 +14,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 python = python
-library ?= /path/to/library
+library ?=
 paper ?= article
 mdflags ?= -f markdown-hard_line_breaks+yaml_metadata_block
-refs ?= $(paper).bib
+refs ?= bibliography.bib
+
+.PHONY: default
+
+default: introducing-julia.pdf introducing-julia.ipynb
 
 draft: $(paper).pdf
 	cp $(paper).pdf $(paper)_`git show -s --format=%ci HEAD | awk '{print $$1}'`_`git rev-parse --short HEAD`.pdf
@@ -26,9 +30,18 @@ draft: $(paper).pdf
 	pandoc --standalone --template=template.latex --bibliography=$(refs) $*.md -o $*.pdf
 
 %-tablet.pdf: %.md $(refs)
-	pandoc --standalone --template=template.latex --bibliography=$(refs) $*.md -o $*-tablet.pdf -V geometry:margin=0.1in -V links-as-notes=false -V papersize=a5paper -V fontsize=12pt
+	pandoc --standalone --template=template.latex --bibliography=$(refs) $*.md -o $*-tablet.pdf -V geometry:margin=0.1in -V links-as-notes=false -V
+	papersize=a5paper -V fontsize=12pt
 
-$(paper).tex: $(paper).md $(texdeps) $(figdeps) $(refs) $(supplementary).tex template.latex
+
+introducing-julia.pdf: introducing-julia.md
+	pandoc --standalone --to=beamer --pdf-engine=xelatex --slide-level=2 $< -o $@
+
+%.md: %.jmd
+	julia -e'using Weave; weave("$*.jmd", doctype="pandoc")'
+
+%.ipynb: %.jmd
+	julia -e'using Weave; convert_doc("$*.jmd", "$*.ipynb")'
 
 %.md: %.Rmd
 	echo 'knitr::knit("$*.Rmd")' | R --vanilla

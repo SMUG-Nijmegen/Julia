@@ -1,0 +1,345 @@
+---
+title : Julia
+subtitle: A new programming language that shows you can have it all
+author:
+    - Phillip M. Alday
+date  : 30 January 2020
+lang: en-US
+header-includes:
+- \usepackage{csquotes}
+- \usepackage{tikz}
+- \definecolor{MPIorange}{HTML}{ED6B06}
+- \definecolor{MPIcyan}{HTML}{00786A}
+- \definecolor{MPIlcyan}{HTML}{80BBB4}
+- \setbeamercolor{local structure}{fg=MPIorange}
+- \setbeamercolor{structure}{fg=MPIcyan}
+include-before:
+- \tikzset{every picture/.append style={trim left=0}}
+theme: Singapore
+aspectratio: 169
+mainfont: Gentium Basic
+mainfontoptions: BoldFont=Gentium Basic Bold
+mainfontoptions: ItalicFont=Gentium Basic Italic
+mainfontoptions: BoldItalicFont=Gentium Basic Bold Italic
+monofont: DejaVu Sans
+---
+
+# Have your cake and eat it too
+
+## Because we're greedy
+
+> We want a language that’s open source, with a liberal license. We want the speed of C with the dynamism of Ruby. We want a language that’s homoiconic, with true macros like Lisp, but with obvious, familiar mathematical notation like Matlab. We want something as usable for general programming as Python, as easy for statistics as R, as natural for string processing as Perl, as powerful for linear algebra as Matlab, as good at gluing programs together as the shell. Something that is dirt simple to learn, yet keeps the most serious hackers happy. We want it interactive and we want it compiled.
+>
+>
+> (Did we mention it should be as fast as C?)
+
+from [Why We Created Julia](https://julialang.org/blog/2012/02/why-we-created-julia/)
+
+. . .
+
+See also:
+[Julia: The Goldilocks language](https://increment.com/programming-languages/goldilocks-language-history-of-julia/) and [Julia: come for the syntax, stay for the speed](https://www.nature.com/articles/d41586-019-02310-3)
+
+## Core syntax looks like more familiar dynamics languages
+
+```{julia;label=fnc;term=true;eval=true}
+function pow(x,n)
+    x^n
+end
+```
+
+If you have passing familiar with Python and MATLAB, Julia will seem very natural. But [there are a few differences](https://docs.julialang.org/en/v1/manual/noteworthy-differences/).
+
+## Balancing compiling and interpreting: JIT compilation
+
+```{julia;term=true;eval=true}
+@time pow(2,2)
+@time pow(2,2)
+```
+
+## A little computer science goes a long way
+
+```{julia;term=true;eval=true}
+function pow(x::Number,n::Integer)
+    # don't actually do this -- its horrible numerically
+    if n < 0
+        x = 1 / x
+        n = -n
+    end
+
+    if n > 0
+        return pow(x, n-1, x*x)
+    elseif n == 1
+        return x
+    else
+        return 1
+    end
+end
+```
+
+## A little computer science goes a long way
+```{julia;term=true;eval=true}
+function pow(x::T,n::Integer,result::T) where T <: Number
+    if n > 0
+        return pow(x, n-1, x * result)
+    else
+        return result
+    end
+end
+
+methods(pow)
+```
+
+## A little computer science goes a long way
+
+```{julia;term=true;eval=true}
+pow(2,1024)
+```
+
+```{julia;term=true;eval=true}
+# don't overflow when exponentiating ints
+pow(x::Int,n::Int) = pow(BigInt(x), n)
+```
+
+```{julia;term=true;eval=true}
+pow(2,1024)
+```
+
+```{julia;term=true;eval=true}
+pow.([2,3,9],2)
+```
+
+## Installing Julia
+
+The [Julia download site](https://julialang.org/downloads/) provides binary downloads for most common operating systems. Ensure that the version you install is at least v1.3.1. Version 1.4.0-rc1 (release candidate 1) is also suitable if you want to be in the vanguard.
+
+## The Julia REPL
+
+By itself the Julia binary provides a basic REPL (read-eval-print-loop), which is quite adequate for installing packages. (Installing and using IDE's for Julia is discussed below.) When you start Julia you are in julia mode, as indicated by the `julia> ` prompt.
+
+Typing certain characters as the first in an input line will change the mode of the REPL.
+
+| Character | Prompt | Context |
+| --------- | ------ | --------------- |
+| `?` | `help?> ` | Help mode - print help messages on functions, types, etc. |
+| `]` | `(v1.3) pkg> ` | Pkg mode - install, list, remove, etc. packages |
+| `;` | `shell> ` | Shell mode - execute a single shell command |
+| `$` | `R> ` | R mode - requires `RCall` package installed and active |
+| `<backspace>` | `julia> ` | return to Julia mode |
+
+# Julia packages
+
+## The Standard Library
+
+```{julia;label=randomlist;term=true}
+using InteractiveUtils, Random, Statistics
+varinfo(Random)   # list exported functions and types
+varinfo(Statistics)
+```
+
+## Some Relevant User-contributed Packages
+
+| Name | Purpose |
+| ---- | ----------- |
+| CSV | read and write comma-separated-value files |
+| CategoricalArrays | `factor`-like objects |
+| DataFrames | data tables with properties and capabilities like R's `data.frame` |
+| DataFramesMeta | database-like operations on data tables |
+| IJulia | Run Julia in Jupyter notebooks }
+| MixedModels | fit and examine mixed-effects models |
+| PooledArrays | light-weight version of categorical arrays |
+| RCall | call R from Julia, including data transfers |
+| RData | read data tables stored in `.rda` or `.rds` format |
+| Tables | general data table structures - either row- or column-oriented |
+| Weave | similar to the `knitr` package for R |
+
+These packages must be added  before they can be attached with `using` (similar to `library` or `require` in R).  In the package REPL (accessed by typing `]` as the first character of a line) just type `add Tables`, for example.
+
+## Integrated Development Environments
+
+Editing and running Julia code is supported in both the [Atom editor](https://atom.io) and [VSCode](https://code.visualstudio.com).  The Atom support is called Juno and is documented at https://junolab.github.io.  The VSCode support is documented at https://www.julia-vscode.org
+
+Either of these environments is fine for this workshop.
+
+## Jupyter notebooks
+
+[Jupyter](https://jupyter.org) provides interactive notebooks in the browser.  When the `IJulia` package is installed and built it installs a version of [`conda`](https://docs.conda.io/en/latest/) if it is not already available.  The `jupyter-notebook` and `jupyter-lab` applications can be added through conda.  If you haven't used Jupyter notebooks it is probably best to wait to install them at the workshop.
+
+## Weave
+
+Like `knitr` for RMarkdown, you can turn Julia Markdown to vanilla Markdown:
+
+```{julia;label=weavecall;term=true;eval=false}
+using Weave
+weave("introducting-julia.jmd", doctype="pandoc")
+```
+
+```{bash;term=true;eval=false}
+pandoc introducing-julia.md --to beamer --pdf-engine=xelatex -o introducing-julia.pdf
+
+```
+
+. . .
+
+But you can also produce IPython Notebooks for interactive teaching, while still maintaining version control friendly `jmd` as the canonical form:
+
+```{julia;term=true;label=weave2ipynb;eval=false}
+using Weave
+convert_doc("introducing-julia.jmd", "introducing-julia.ipynb")
+```
+
+# RCall: Or How I Learned to Stop Worrying and Love Getting Stuff Done
+
+## You can access R objects directly from within Julia
+
+```{julia;term=true}
+using RCall
+R"lme4::sleepstudy"
+```
+
+## You can access R objects directly from within Julia
+
+```{julia;term=true}
+using RCall, DataFrames
+sleep = rcopy(R"lme4::sleepstudy");
+first(sleep, 6)
+```
+
+# Fine Print
+
+## A couple of gotchas:
+
+- variable semantics are like Pythons (pass by reference with immutable numeric and string types)
+- there is a difference between single and double quotes and characters and stringss
+- the numeric type system is *much* richer than either Python or R
+```{julia;term=true}
+π
+typeof(π)
+```
+- one-based indexing (like R and MATLAB)
+
+
+## Good references
+- [Quick Reference](https://juliadocs.github.io/Julia-Cheat-Sheet/)
+- [Unicode Reference](https://docs.julialang.org/en/v1/manual/unicode-input/)
+- [FAQs](https://docs.julialang.org/en/v1/manual/faq/)
+- [Noteworthy differences from other languages](https://docs.julialang.org/en/v1/manual/noteworthy-differences/)
+- [Weave](http://weavejl.mpastell.com/stable/)
+- [Performance tips](https://docs.julialang.org/en/v1/manual/performance-tips/)
+- [Style Guide (also relevant for performance)](https://docs.julialang.org/en/v1/manual/style-guide/)
+- [Workflow tips](https://docs.julialang.org/en/v1/manual/workflow-tips/)
+
+# Now some live coding using MixedModels.jl
+
+## huge datasets
+
+```{julia}
+using Random, DataFrames, MixedModels, PooledArrays
+gendata(n::Int, nID::Int, nested=true) = gendata(MersenneTwister(42), n, nID, nested)
+
+function gendata(rng::AbstractRNG, n::Int, nID::Int, nested::Bool)
+    df = DataFrame(y = zeros(n),
+                   w = rand(rng, n),
+                   x = rand(rng, n),
+                   z = rand(rng, n),
+                   sex = CategoricalArray([randstring(rng,"mf",1) for ii in 1:n]),
+                   group = CategoricalArray(rand(rng, 1:5, n)),
+                   ID = CategoricalArray(rand(rng, 1:nID, n)))
+
+    uID = DataFrame(ID = unique(df.ID),
+                    u = randn(rng, nID))
+    if nested
+        uID.city = CategoricalArray(rand(rng, 1:30, length(unique(df.ID))))
+    else
+        df.city = CategoricalArray(rand(rng, 1:30, n))
+    end
+
+    df = join(df, uID, on=:ID)
+    # set all betas for continous to 1 and normal(0,1) residuals
+    # group isn't further specified, so it's just noise
+    df.y = 1 .+ df.w + df.x + df.z + (df.sex .== "m") + df.u + randn(rng,n)
+
+    # there aren't many levels of city, so stepping through them makes more
+    # sense than doing another join
+    for cc in unique(df.city)
+        df[df.city .== cc, :y] = df[df.city .== cc, :y] .+ randn(rng)
+    end
+
+    df
+end
+```
+
+```{julia;eval=false}
+@time df = gendata(100,10);
+```
+
+```{julia;eval=false}
+@time warmup = LinearMixedModel(@formula(y ~ 1 + x + w + z + sex + group + (1 | ID) + (1|city)), df);
+```
+
+```{julia;eval=false}
+@time fit!(warmup)
+```
+
+```{julia;eval=false}
+@time df = gendata(1000,10);
+```
+
+```{julia;eval=false}
+@time msmall = LinearMixedModel(@formula(y ~ 1 + x + w + z + sex + group + (1 | ID) + (1|city)), df);
+```
+
+```{julia;eval=false}
+@time fit!(msmall)
+```
+
+```{julia;eval=false}
+@time df = gendata(1000000,1000);
+```
+
+```{julia;eval=false}
+@time mbig = LinearMixedModel(@formula(y ~ 1 + x + w + z + sex + group + (1 | ID) + (1|city)), df);
+```
+
+```{julia;eval=false}
+@time fit!(mbig)
+```
+
+```{julia;eval=false}
+@time df = gendata(2000000,5000);
+```
+
+```{julia;eval=false}
+@time mhuge = LinearMixedModel(@formula(y ~ 1 + x + w + z + sex + group + (1 | ID) + (1|city)), df);
+```
+
+```{julia;eval=false}
+@time fit!(mhuge)
+```
+
+## Using RCall in the REPL to fit a model in Julia and manipulate it in R
+
+
+```{julia;eval=false}
+usng RCall, DataFrames, MixedModels
+insteval = rcopy(R"lme4::InstEval")
+@time mod = fit(MixedModel,@formula(y ~ service  + (1|d) + (1|s) + (1|dept)),insteval,verbose=true)
+mod.θ
+R> library("lme4")
+R> theta <- $(mod.θ)
+R> system.time(
+mod_julia <- lmer(y ~ service + (1|d) + (1|s) + (1|dept), InstEval, REML=FALSE, start=theta, control=lmerControl("nloptwrap",optCtrl=list(maxeval=1),calc.derivs=FALSE)))
+R> library(car)
+R> Anova(mod_julia )
+R> plot(mod_julia )
+R> library("lattice")
+R> qqmath(mod_julia )
+R> system.time(
+modR <- lmer(y ~ service + (1|d) + (1|s) + (1|dept), InstEval, REML=FALSE, control=lmerControl("nloptwrap",calc.derivs=FALSE)))
+# be wary of contrast coding
+@time mod = fit(MixedModel,@formula(y ~ service + lectage + studage + (1|d) + (1|s) + (1|dept)),insteval,verbose=true)
+modR <- lmer(y ~ service + lectage + studage + (1|d) + (1|s) + (1|dept), InstEval, REML=FALSE, control=lmerControl("nloptwrap",calc.derivs=FALSE)))
+# doesn't work
+# @time mod2= fit(MixedModel,@formula(y ~ service + (1+service|d) + (1|s) + (1|dept)),insteval,verbose=true)
+
+```

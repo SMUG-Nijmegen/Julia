@@ -23,3 +23,7 @@ README.{pdf,html,doc,docx,odt}
 *\~
 bib.keys
 *.swp
+
+*.ipynb
+missfont.log
+
